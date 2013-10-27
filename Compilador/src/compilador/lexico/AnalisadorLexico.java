@@ -125,8 +125,14 @@ public class AnalisadorLexico {
 			}
 		}
 		
-		if (PalavrasChave.checar(token.toString()))
-			return new Elemento(token.toString(), TipoToken.PALAVRA_CHAVE, linha);
+		if (PalavrasChave.checar(token.toString())) {
+			if (checarTipo(token.toString(), ExpressaoRegular.OPERADOR_MULTIPLICATIVO))
+				return new Elemento(token.toString(), TipoToken.OPERADOR_MULTIPLICATIVO, linha);
+			else if (checarTipo(token.toString(), ExpressaoRegular.OPERADOR_ADITIVO))
+				return new Elemento(token.toString(), TipoToken.OPERADOR_ADITIVO, linha);
+			else
+				return new Elemento(token.toString(), TipoToken.PALAVRA_CHAVE, linha);
+		}
 		else
 			return new Elemento(token.toString(), TipoToken.IDENTIFICADOR, linha);
 	}
@@ -164,8 +170,7 @@ public class AnalisadorLexico {
 				break;					
 			}
 		}
-		return new Elemento(token.toString(), TipoToken.NUMERO_REAL, linha);
-		
+		return new Elemento(token.toString(), TipoToken.NUMERO_REAL, linha);		
 	}
 	
 	private Elemento processaDelimitador(char caractere) throws IOException {

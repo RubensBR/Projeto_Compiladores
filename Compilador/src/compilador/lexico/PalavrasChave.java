@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 public class PalavrasChave {
 	private static String[] palavrasChave = {"program", "var", "integer", "real", "boolean", "procedure",
-		"begin", "end", "if", "then", "else", "while", "do", "not"};
+		"begin", "end", "if", "then", "else", "while", "do", "not", "and", "or"};
 	
 	private static String expressao;
 	

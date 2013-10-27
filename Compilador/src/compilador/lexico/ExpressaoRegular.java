@@ -7,6 +7,6 @@ public class ExpressaoRegular {
 	public static String DELIMITADOR = "^[;.:(),]$";
 	public static String ATRIBUICAO = "^:=$";
 	public static String OPERADOR_RELACIONAL = "^[=<>]$|^<=$|^>=$|^<>$";
-	public static String OPERADOR_ADITIVO = "[+-]";
-	public static String OPERADOR_MULTIPLICATIVO = "[*/]";
+	public static String OPERADOR_ADITIVO = "^[+-]$|^or$";
+	public static String OPERADOR_MULTIPLICATIVO = "^[*/]$|^and$";
 }
