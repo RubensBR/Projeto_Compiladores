@@ -20,6 +20,39 @@ public class Elemento {
 		return tipo;
 	}
 
+	public String getClassificao() {
+		switch (tipo) {
+			case PALAVRA_CHAVE:
+				return "Palavra Chave";				
+			
+			case IDENTIFICADOR:
+				return "Identificador";				
+				
+			case NUMERO_INTEIRO:
+				return "Número Inteiro";
+			
+			case NUMERO_REAL:
+				return "Número Real";
+			
+			case DELIMITADOR: 
+				return "Delimitador";
+			
+			case COMANDO_ATRIBUICAO: 
+				return "Comando Atribuição";
+			
+			case OPERADOR_RELACIONAL:
+				return "Operador Relacional";
+				
+			case OPERADOR_ADITIVO:
+				return "Operador Aditivo";
+			
+			case OPERADOR_MULTIPLICATIVO:
+				return "Operador Multiplicativo";			
+		}
+		return "erro";
+	}
+	
+	
 	public int getLinha() {
 		return linha;
 	}	
