@@ -142,7 +142,9 @@ public class AnalisadorLexico {
 			}
 			else {
 				if (proximoCaractere == '.') {
-					ehReal = true;					
+					ehReal = true;
+					token.append(proximoCaractere);
+					break;
 				} 
 				reader.unread((int) proximoCaractere);
 				break;
