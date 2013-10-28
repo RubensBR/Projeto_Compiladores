@@ -23,7 +23,7 @@ public class Elemento {
 	public String getClassificao() {
 		switch (tipo) {
 			case PALAVRA_CHAVE:
-				return "Palavra Chave";				
+				return "Palavra Reservada";				
 			
 			case IDENTIFICADOR:
 				return "Identificador";				
