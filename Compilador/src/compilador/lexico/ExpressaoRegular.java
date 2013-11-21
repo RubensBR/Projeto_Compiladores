@@ -9,4 +9,5 @@ public class ExpressaoRegular {
 	public static String OPERADOR_RELACIONAL = "^[=<>]$|^<=$|^>=$|^<>$";
 	public static String OPERADOR_ADITIVO = "^[+-]$|^or$";
 	public static String OPERADOR_MULTIPLICATIVO = "^[*/]$|^and$";
+	public static String OPERADOR_LOGICO = "^not$|^true$|^false$";
 }

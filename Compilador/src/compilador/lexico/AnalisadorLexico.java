@@ -96,10 +96,27 @@ public class AnalisadorLexico {
 		}
 	}
 	
-	private boolean checarEspacosEChaves(char caractere) {
+	private boolean checarEspacosEChaves(char caractere) throws IOException {
 		if (caractere == '{') {
 			ehComentario = true;
 			return true;
+		}
+		
+		if (caractere == '/' && reader.ready()) {
+			char proximoCaractere = (char) reader.read();
+			if (proximoCaractere == '/') {
+				while (reader.ready()) {
+					proximoCaractere = (char) reader.read();					
+					if (proximoCaractere == '\n') {
+						++linha;
+						break;
+					}
+				}
+				return true;
+			} else {
+				reader.unread((int) proximoCaractere);
+				return false;
+			}			
 		}
 		
 		if (Character.isWhitespace(caractere)) {
@@ -125,14 +142,14 @@ public class AnalisadorLexico {
 			}
 		}
 		
-		if (PalavrasChave.checar(token.toString())) {
-			if (checarTipo(token.toString(), ExpressaoRegular.OPERADOR_MULTIPLICATIVO))
-				return new Elemento(token.toString(), TipoToken.OPERADOR_MULTIPLICATIVO, linha);
-			else if (checarTipo(token.toString(), ExpressaoRegular.OPERADOR_ADITIVO))
-				return new Elemento(token.toString(), TipoToken.OPERADOR_ADITIVO, linha);
-			else
-				return new Elemento(token.toString(), TipoToken.PALAVRA_CHAVE, linha);
-		}
+		if (PalavrasChave.checar(token.toString()))
+			return new Elemento(token.toString(), TipoToken.PALAVRA_CHAVE, linha);
+		else if (checarTipo(token.toString(), ExpressaoRegular.OPERADOR_MULTIPLICATIVO))
+			return new Elemento(token.toString(), TipoToken.OPERADOR_MULTIPLICATIVO, linha);
+		else if (checarTipo(token.toString(), ExpressaoRegular.OPERADOR_ADITIVO))
+			return new Elemento(token.toString(), TipoToken.OPERADOR_ADITIVO, linha);
+		else if (checarTipo(token.toString(), ExpressaoRegular.OPERADOR_LOGICO))
+			return new Elemento(token.toString(), TipoToken.OPERADOR_LOGICO, linha);		
 		else
 			return new Elemento(token.toString(), TipoToken.IDENTIFICADOR, linha);
 	}

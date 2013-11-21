@@ -47,7 +47,10 @@ public class Elemento {
 				return "Operador Aditivo";
 			
 			case OPERADOR_MULTIPLICATIVO:
-				return "Operador Multiplicativo";			
+				return "Operador Multiplicativo";	
+			
+			case OPERADOR_LOGICO:
+				return "Operador Lógico";
 		}
 		return "erro";
 	}

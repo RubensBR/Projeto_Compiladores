@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import compilador.lexico.AnalisadorLexico;
 import compilador.lexico.Elemento;
+import compilador.sintatico.AnalisadorSintatico;
 
 
 public class Teste {
@@ -25,5 +26,8 @@ public class Teste {
 			System.out.format("|%20s|%25s|%10s|\n", token, operacao, line);
 		}
 		System.out.println("+--------------------+-------------------------+----------+");
+		
+		AnalisadorSintatico sintatico = new AnalisadorSintatico(tabela);
+		sintatico.analisar();
 	}
 }
