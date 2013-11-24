@@ -1,14 +1,23 @@
 program Test3;
 var
-   NUMERO  : real;
-   final   : boolean;
    teste   : integer;
+procedure teste(valor, teste:integer; a :integer);
+begin
+	a := 3;
+end;
+
+procedure teste2(valor, teste:integer; a :integer);
+begin
+	a := 3;
+end;
 
 begin 
-   NUMERO := 3 * 5 + 7 - 9.5;
-   if (NUMERO >= 20) and (NUMERO <=90) then
-      NUMERO := 10 / 3;
-   final := NUMERO + 1	  
+	if (a = 1) then
+	  a := 2
+	else 
+	  a := 3;
+	 
+	a := 1;
+	funcao;
+	teste 
 end.
-not
-or

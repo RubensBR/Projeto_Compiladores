@@ -29,16 +29,16 @@ public class AnalisadorSintatico {
 	
 	private void obterSimbolo() {
 		if (tabela.size() == index) {
-			System.out.println("Encerrou");
+			System.out.println("Fim de programa inesperado");
 			System.exit(1);
 		}
 		
 		simboloLido = tabela.get(index++);
-		//System.out.println("Leu: '" + simboloLido.getToken() + "' linha: " + simboloLido.getLinha());
+		System.out.println("Leu: '" + simboloLido.getToken() + "' linha: " + simboloLido.getLinha());
 	}	
 	
 	private void gerarErro(String msg) {
-		System.out.println("Erro: " + msg + ", " + "linha: " + tabela.get(index - 1).getLinha());
+		System.out.println(">>> Erro: " + msg + ", " + "linha: " + tabela.get(index - 1).getLinha());
 		System.exit(1);
 	}
 	//programa → program id; declarações_variáveis declarações_de_subprogramas comando_composto . 
@@ -61,8 +61,8 @@ public class AnalisadorSintatico {
 		obterSimbolo();
 		declaracoesVariaveis();
 		declaracoesSubprogramas();
-//		comandoComposto();
-//		fimDePrograma();
+		comandoComposto();
+		fimDePrograma();
 		
 		System.out.println("programa ok");
 	}
@@ -230,7 +230,7 @@ public class AnalisadorSintatico {
 		if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "begin")) {
 			obterSimbolo();
 			comandosOpcionais();
-			if (checarTipoElemento(simbolLido, TipoToken.PALAVRA_CHAVE, "end")) {
+			if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "end")) {
 				obterSimbolo();
 			} else {
 				gerarErro("Palavra-chave end esperada no lugar de " + simboloLido.getToken());
@@ -242,14 +242,13 @@ public class AnalisadorSintatico {
 	
 	//comandos_opcionais → lista_de_comandos | ε
 	private void comandosOpcionais() {
-		if (!comando())
-			return;
 		listaComandos();
 	}
 	
 	//lista_de_comandos_ aux → ; comando lista_de_comandos_ aux | ε
 	private void listaComandosAux() {
 		if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ";")) {
+			obterSimbolo();
 			comando();
 			listaComandosAux();
 		}
@@ -265,8 +264,6 @@ public class AnalisadorSintatico {
 			| if expressão then comando parte_else | while expressão do comando */
 	private boolean comando() {
 		if (variavelAtribuicaoExpressao()) {
-			return true;
-		} else if (ativacaoProcedimento()) {
 			return true;
 		} else if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "begin")) {
 			comandoComposto();
@@ -290,8 +287,8 @@ public class AnalisadorSintatico {
 				expressao();
 				return true;
 			} else {
-				--index; //devolve o símbolo lido pois pode casar com outro caso
-				return false;
+				/*Como variável é um id verifica se poder ser uma ativação de procedimento*/
+				return ativacaoProcedimento(); 
 			}
 		} else {
 			return false;
@@ -299,24 +296,19 @@ public class AnalisadorSintatico {
 	}
 	
 	//ativação_de_procedimento → id | id (lista_de_expressões)
-	private boolean ativacaoProcedimento() {
-		if (checarTipoElemento(simboloLido, TipoToken.IDENTIFICADOR)) {
+	private boolean ativacaoProcedimento() {	
+		if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, "(")) {
 			obterSimbolo();
-			if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, "(")) {
+			listaExpressoes();
+			if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ")")) {
 				obterSimbolo();
-				listaExpressoes();
-				if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ")")) {
-					obterSimbolo();
-					return true;
-				} else {
-					gerarErro("delemitador ')' esperado");
-					return true;
-				}
-			} else { //então é só o id
-				return true;				
+				return true;
+			} else {
+				gerarErro("delemitador ')' esperado");
+				return true;
 			}
-		} else {
-			return false;
+		} else { //então é só o id
+			return true;				
 		}
 	}
 	
@@ -326,6 +318,7 @@ public class AnalisadorSintatico {
 			obterSimbolo();
 			expressao();
 			if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "then")) {
+				obterSimbolo();
 				comando();
 				parteElse();
 				return true;
@@ -358,6 +351,7 @@ public class AnalisadorSintatico {
 	
 	//parte_else → else comando | ε
 	private void parteElse() {
+		
 		if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "else")) {
 			obterSimbolo();
 			comando();
@@ -366,7 +360,7 @@ public class AnalisadorSintatico {
 	
 	//lista_de_expressões_aux → , expressão lista_de_expressões_aux | ε
 	private void listaExpressoesAux() {
-		if (chehcarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ",")) {
+		if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ",")) {
 			expressao();
 			listaExpressoesAux();
 		} 
@@ -380,27 +374,64 @@ public class AnalisadorSintatico {
 	
 	//expressão → expressão_simples | expressão_simples op_relacional expressão_simples
 	private void expressao() {
-		
+		if (expressaoSimples(true)) {
+			if(opRelacioal()) {
+				expressaoSimples(false);
+			} else {
+				return;
+			}
+		}
 	}
 	
 	//expressão_simples_aux →  op_aditivo termo expressão_simples_ aux | ε
-	private boolean expressaoSimplesAux() {
-		
+	private void expressaoSimplesAux() {
+		if (opAditivo()) {
+			if (termo(true)) {
+				expressaoSimplesAux();
+			} else {
+				gerarErro("esperardo identificador ou identificador (lista_de_expressões) ou num_int ou num_real ou true ou false ou (expressão) ou not");
+			}
+		}
 	}
 	
 	//expressão_simples →  termo expressão_simples_ aux | sinal termo expressão_simples_ aux 
-	private boolean expressaoSimples() {
-		
+	private boolean expressaoSimples(boolean teste) {
+		if (termo(true)) {
+			expressaoSimplesAux();
+			return true;
+		} else if (sinal()) {
+			if (termo(true)) {
+				expressaoSimplesAux();
+				return true;
+			}
+		} else {
+			if (!teste)
+				gerarErro("expressão inválida");
+			return false;
+		}
+		return false;
 	}
 	
 	//termo_aux →  op_multiplicativo fator termo_ aux | ε
+	private void termoAux() {
+		if (opMultiplicativo()) {
+			if (fator()) {
+				termoAux();
+			} else {
+				gerarErro("esperardo identificador ou identificador (lista_de_expressões) ou num_int ou num_real ou true ou false ou (expressão) ou not");
+			}
+		} 
+	}
 	
-	//termo → fator termo_ aux
-	private boolean termo() { 
+	//termo → fator termo_aux
+	private boolean termo(boolean teste) { 
 		if (fator()) {
-			
+			termoAux();
+			return true;
 		} else {
-			
+			if (!teste)				
+				gerarErro("esperardo identificador ou identificador (lista_de_expressões) ou num_int ou num_real ou true ou false ou (expressão) ou not");
+			return false;
 		}
 	}
 	
@@ -447,6 +478,7 @@ public class AnalisadorSintatico {
 				return true;
 			} else {
 				gerarErro("simbolo inválido para operador 'not'");
+				return true;
 			}
 		
 		} else {
@@ -457,7 +489,7 @@ public class AnalisadorSintatico {
 	//sinal → + | - 
 	private boolean sinal() {
 		if (checarTipoElemento(simboloLido, TipoToken.OPERADOR_ADITIVO, "+") 
-				|| (checarTipoElemento(simboloLido, TipoToken.OPERADOR_ADITIVO, "+"))) {
+				|| (checarTipoElemento(simboloLido, TipoToken.OPERADOR_ADITIVO, "-"))) {
 			obterSimbolo();
 			return true;
 		}
@@ -491,4 +523,9 @@ public class AnalisadorSintatico {
 		return false;
 	}
 	
+	private void fimDePrograma() {
+		if (!checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ".")) {
+			gerarErro("delimitador de fim de programa '.' esperado");
+		}
+	}
 }

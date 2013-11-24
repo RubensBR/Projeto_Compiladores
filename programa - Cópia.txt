@@ -1,0 +1,14 @@
+program Test3;
+var
+   NUMERO  : real;
+   final   : boolean;
+   teste   : integer;
+
+begin 
+   NUMERO := 3 * 5 + 7 - 9.5;
+   if (NUMERO >= 20) and (NUMERO <=90) then
+      NUMERO := 10 / 3;
+   final := NUMERO + 1	  
+end.
+not
+or
