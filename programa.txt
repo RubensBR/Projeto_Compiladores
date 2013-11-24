@@ -1,7 +1,7 @@
 program Test3;
 var
-   NUMERO  : integer;
-   final   : integer;
+   NUMERO  : real;
+   final   : boolean;
    teste   : integer;
 
 begin 
