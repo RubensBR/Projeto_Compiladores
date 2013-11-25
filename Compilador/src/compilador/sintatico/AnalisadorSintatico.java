@@ -34,7 +34,7 @@ public class AnalisadorSintatico {
 		}
 		
 		simboloLido = tabela.get(index++);
-		System.out.println("Leu: '" + simboloLido.getToken() + "' linha: " + simboloLido.getLinha());
+		//System.out.println("Leu: '" + simboloLido.getToken() + "' linha: " + simboloLido.getLinha());
 	}	
 	
 	private void gerarErro(String msg) {
@@ -64,7 +64,7 @@ public class AnalisadorSintatico {
 		comandoComposto();
 		fimDePrograma();
 		
-		System.out.println("programa ok");
+		System.out.println("Programa analisado com sucesso.");
 	}
 	
 	//declarações_variáveis → var lista_declarações_variáveis | ε
@@ -272,9 +272,55 @@ public class AnalisadorSintatico {
 			return true;
 		} else if (whileDo()) {
 			return true;
+		} else if(forTo()) {
+			return true;
 		} else {
 			return false;
 		}
+	}
+	
+	/*comando -> for variavel := INT TO   INT listaComandos
+	comando -> for variavel := INT UNTO INT listaComandos*/
+	private boolean forTo() {
+		if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "for")) {
+			obterSimbolo();
+			if (checarTipoElemento(simboloLido, TipoToken.IDENTIFICADOR)) {
+				obterSimbolo();
+				if (checarTipoElemento(simboloLido, TipoToken.COMANDO_ATRIBUICAO)) {
+					obterSimbolo();
+					if (checarTipoElemento(simboloLido, TipoToken.NUMERO_INTEIRO)) {
+						obterSimbolo();
+						if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "to") 
+								|| checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "unto")) {
+							obterSimbolo();
+							if (checarTipoElemento(simboloLido, TipoToken.NUMERO_INTEIRO)) {
+								obterSimbolo();
+								listaComandos();
+								return true;
+							} else {
+								gerarErro("esperado valor inteiro após 'to' ou 'unto'");
+								return true;
+							}
+						} else {
+							gerarErro("Esperado palavara-chave 'to' ou 'unto'");
+							return true;
+						}
+					} else {
+						gerarErro("esperado valor inteiro após comando de atribuição");
+						return true;
+					}
+				} else {
+					gerarErro("esperado comando de atribuição após variável");
+					return true;
+				}
+				
+			} else {
+				gerarErro("variável esperada após 'for'");
+				return true;
+			}
+		} else {
+			return false;
+		}		
 	}
 	
 	//variável := expressão
