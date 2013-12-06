@@ -327,10 +327,19 @@ public class AnalisadorSintatico {
 	private boolean variavelAtribuicaoExpressao() {
 		//variável
 		if (checarTipoElemento(simboloLido, TipoToken.IDENTIFICADOR)) {
+			// --Semantico--
+			String aux = simboloLido.getToken();
+			// -------------
 			obterSimbolo();
 			if (checarTipoElemento(simboloLido, TipoToken.COMANDO_ATRIBUICAO)) {
+				// --Semantico--
+				System.out.println(aux + " = ");
+				// -------------
 				obterSimbolo();
 				expressao();
+				// --Semantico--
+				System.out.println(">>>Testar Expressao");
+				// -------------
 				return true;
 			} else {
 				/*Como variável é um id verifica se poder ser uma ativação de procedimento*/
@@ -420,10 +429,15 @@ public class AnalisadorSintatico {
 	
 	//expressão → expressão_simples | expressão_simples op_relacional expressão_simples
 	private void expressao() {
+		// -- Semantico --
+		System.out.println("Expressão {");
+		// ---------------
 		if (expressaoSimples(true)) {
 			if(opRelacioal()) {
 				expressaoSimples(false);
+				System.out.println("}");
 			} else {
+				System.out.println("}");
 				return;
 			}
 		}
@@ -485,11 +499,20 @@ public class AnalisadorSintatico {
 	//#fator → id | id (lista_de_expressões) | num_int | num_real | true | false | (expressão) | not fator
 	private boolean fator() {
 		if (checarTipoElemento(simboloLido, TipoToken.IDENTIFICADOR)) {
+			// --Semantico--
+			System.out.println("idenfificador: " + simboloLido.getToken());
+			// -------------
 			obterSimbolo();
 			if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, "(")) {
+				// --Semantico--
+				System.out.println("(");
+				// -------------
 				obterSimbolo();
 				listaExpressoes();
 				if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ")")) {
+					// --Semantico--
+					System.out.println(")");
+					// -------------
 					obterSimbolo();
 					return true;
 				} else {
@@ -504,13 +527,24 @@ public class AnalisadorSintatico {
 				|| checarTipoElemento(simboloLido, TipoToken.NUMERO_REAL) 
 				|| checarTipoElemento(simboloLido, TipoToken.OPERADOR_LOGICO, "true")
 				|| checarTipoElemento(simboloLido, TipoToken.OPERADOR_LOGICO, "false")) {
+			
+			// --Semantico--
+			System.out.println(simboloLido.getClassificao());
+			// -------------
 			obterSimbolo();
 			return true;
 			
 		} else if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, "(")) {
+			// --Semantico--
+			System.out.println("(");
+			// -------------
+			
 			obterSimbolo();
 			expressao();
 			if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ")")) {
+				// --Semantico--
+				System.out.println(")");
+				// -------------
 				obterSimbolo();
 				return true;
 			} else {
@@ -545,6 +579,9 @@ public class AnalisadorSintatico {
 	//op_relacional → = | < | > | <= | >= | <>
 	private boolean opRelacioal() {
 		if (checarTipoElemento(simboloLido, TipoToken.OPERADOR_RELACIONAL)) {
+			// --Semantico--
+			System.out.println("operador Relacional");
+			// -------------
 			obterSimbolo();
 			return true;
 		}
@@ -554,6 +591,9 @@ public class AnalisadorSintatico {
 	//op_aditivo → + | - | or
 	private boolean opAditivo() {
 		if (checarTipoElemento(simboloLido, TipoToken.OPERADOR_ADITIVO)) {
+			// --Semantico--
+			System.out.println("Operador Aditivo");
+			// -------------
 			obterSimbolo();
 			return true;
 		}
@@ -563,6 +603,9 @@ public class AnalisadorSintatico {
 	//op_multiplicativo → * | / | and
 	private boolean opMultiplicativo() {
 		if (checarTipoElemento(simboloLido, TipoToken.OPERADOR_MULTIPLICATIVO)) {
+			// --Semantico--
+			System.out.println("Operador Multiplicativo");
+			// -------------
 			obterSimbolo();
 			return true;
 		}
