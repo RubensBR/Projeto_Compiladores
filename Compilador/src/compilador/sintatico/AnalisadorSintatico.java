@@ -4,15 +4,22 @@ import java.util.ArrayList;
 
 import compilador.lexico.Elemento;
 import compilador.lexico.TipoToken;
+import compilador.semantico.AnalisadorExpressao.Tipo;
+import compilador.semantico.Identificador;
+import compilador.semantico.PilhaEscopo;
 
 public class AnalisadorSintatico {
 
 	private ArrayList<Elemento> tabela;
 	private int index = 0;
 	private Elemento simboloLido = null;
+	// --Semântico--
+	private ArrayList<Tipo> expresao;
+	PilhaEscopo pilhaEscopo = new PilhaEscopo();
+	//--------------
 	
 	public AnalisadorSintatico(ArrayList<Elemento> tabela) {
-		this.tabela = tabela;
+		this.tabela = tabela;	
 	}
 	
 	public void analisar() {
@@ -47,7 +54,10 @@ public class AnalisadorSintatico {
 		if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "program")) {
 			obterSimbolo();
 			if (checarTipoElemento(simboloLido, TipoToken.IDENTIFICADOR)) {
-				obterSimbolo();
+				// --Semântico--
+				pilhaEscopo.iniciarEscopoPrograma(simboloLido.getToken());				
+				//--------------
+				obterSimbolo();				
 				if (!checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ";")){
 					gerarErro("';' esperado após identificador");
 				}
@@ -120,6 +130,12 @@ public class AnalisadorSintatico {
 		if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ",")) {
 			obterSimbolo();
 			if (checarTipoElemento(simboloLido, TipoToken.IDENTIFICADOR)) {
+				// --Semântico--
+				if (pilhaEscopo.foiDeclarada(simboloLido.getToken())) {
+					gerarErro("Identificador " + simboloLido.getToken() + " já foi declarado.");
+				}					
+				pilhaEscopo.push(new Identificador(simboloLido.getToken(), Tipo.DESCONHECIDO));
+			//--------------
 				obterSimbolo();
 				listaIdentificadoresAux();
 			} else {
@@ -131,6 +147,12 @@ public class AnalisadorSintatico {
 	//lista_de_identificadores → id lista_de_identificadores_aux
 	private void listaIdentificadores() {
 		if (checarTipoElemento(simboloLido, TipoToken.IDENTIFICADOR)) {
+			// --Semântico--
+				if (pilhaEscopo.foiDeclarada(simboloLido.getToken())) {
+					gerarErro("Identificador " + simboloLido.getToken() + " já foi declarado.");
+				}					
+				pilhaEscopo.push(new Identificador(simboloLido.getToken(), Tipo.DESCONHECIDO));
+			//--------------
 			obterSimbolo();
 			listaIdentificadoresAux();
 		} else {
@@ -143,6 +165,19 @@ public class AnalisadorSintatico {
 		if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "integer") 
 				|| checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "real")
 				|| checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "boolean")) {
+		// --Semântico--
+			switch (simboloLido.getToken()) {
+			case "integer": 
+					pilhaEscopo.atribuirTipo(Tipo.INTEGER);
+					break;
+			case "real":
+					pilhaEscopo.atribuirTipo(Tipo.REAL);
+					break;
+			case "boolean":
+					pilhaEscopo.atribuirTipo(Tipo.BOOLEANO);
+					break;					
+			}			
+		//--------------
 			obterSimbolo();
 		} else {
 			gerarErro("O tipo '" + simboloLido.getToken() + "' não é válido");
@@ -164,9 +199,15 @@ public class AnalisadorSintatico {
 	
 	//declaração_de_subprograma → procedure id argumentos; declarações_variáveis declarações_de_subprogramas comando_composto
 	private void declaracaoSubprograma() {
-		if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "procedure")) {
+		if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "procedure")) {	
 			obterSimbolo();
 			if (checarTipoElemento(simboloLido, TipoToken.IDENTIFICADOR)) {
+				// --Semântico--
+				if (pilhaEscopo.foiDeclarada(simboloLido.getToken()))
+					gerarErro("Identificador " + simboloLido.getToken() + " já foi declarado.");
+				pilhaEscopo.push(new Identificador(simboloLido.getToken(), Tipo.PROCEDURE));
+				pilhaEscopo.novoEscopo();
+				//--------------
 				obterSimbolo();
 				argumentos();
 				if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ";")) {
@@ -232,6 +273,11 @@ public class AnalisadorSintatico {
 			comandosOpcionais();
 			if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "end")) {
 				obterSimbolo();
+				// --Semântico--
+				if (simboloLido.getToken().equals(";")) {
+					pilhaEscopo.fimDeEscopo();
+				}
+				//--------------
 			} else {
 				gerarErro("Palavra-chave end esperada no lugar de " + simboloLido.getToken());
 			}
@@ -285,6 +331,10 @@ public class AnalisadorSintatico {
 		if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "for")) {
 			obterSimbolo();
 			if (checarTipoElemento(simboloLido, TipoToken.IDENTIFICADOR)) {
+				// --Semântico--
+					if (!pilhaEscopo.foiDeclarada(simboloLido.getToken())) 
+						gerarErro("Identificador " + simboloLido.getToken() + "não foi declarado");
+				//--------------
 				obterSimbolo();
 				if (checarTipoElemento(simboloLido, TipoToken.COMANDO_ATRIBUICAO)) {
 					obterSimbolo();
@@ -328,12 +378,13 @@ public class AnalisadorSintatico {
 		//variável
 		if (checarTipoElemento(simboloLido, TipoToken.IDENTIFICADOR)) {
 			// --Semantico--
-			String aux = simboloLido.getToken();
+			if (!pilhaEscopo.foiDeclarada(simboloLido.getToken()))
+				gerarErro("Identificador " + simboloLido.getToken() + " não foi declarada");
 			// -------------
 			obterSimbolo();
 			if (checarTipoElemento(simboloLido, TipoToken.COMANDO_ATRIBUICAO)) {
 				// --Semantico--
-				System.out.println(aux + " = ");
+				//System.out.println(aux + " = ");
 				// -------------
 				obterSimbolo();
 				expressao();
@@ -500,7 +551,8 @@ public class AnalisadorSintatico {
 	private boolean fator() {
 		if (checarTipoElemento(simboloLido, TipoToken.IDENTIFICADOR)) {
 			// --Semantico--
-			System.out.println("idenfificador: " + simboloLido.getToken());
+			if (!pilhaEscopo.foiDeclarada(simboloLido.getToken()))
+				gerarErro("Identificador " + simboloLido.getToken() + " não foi declarado.");
 			// -------------
 			obterSimbolo();
 			if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, "(")) {

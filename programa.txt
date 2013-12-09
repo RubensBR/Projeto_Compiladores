@@ -1,35 +1,18 @@
-program Test3;
-var
-   teste   : integer;
-   
-   
-procedure funcao1(valor, teste:integer; a :integer);
-var 
-	valor : integer;
+program exemplo;
+var faca, queijo: real;
+
+procedure x (a : integer);
+var xa, xb: integer;
 begin
-	valor := valor + 1;
+	faca := xa + xb * x;
 end;
 
-procedure funcao2(valor, teste:integer; a :integer);
-var 
-	valor2 : real;
+procedure get (valor : integer);
+var c, d, x1: integer;
 begin
-	valor2 := -3.5;
+	faca := x + valor * 2;
 end;
 
-begin 
-	if (a = 1) then
-	  a := 2 + 1 + 5 / 2
-	else 
-	  a := 3;
-	  
-	while (a < 10) do
-	  a := a * 2;
-	  
-	for a := 0 to 10
-		b := b + a;
-	 
-	a := 1 + 5 * 10 - 2 * (-1);
-	funcao1;
-	funcao2 
+begin
+	faca := faca + exemplo * 2;
 end.
