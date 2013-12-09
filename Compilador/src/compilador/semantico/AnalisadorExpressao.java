@@ -13,10 +13,11 @@ public class AnalisadorExpressao {
 		PARENTESE_ABERTO, PARENTESE_FECHADO, 			  		   //parenteses
 		INTEGER, REAL, BOOLEANO 						  		   //tipos
 	}
-	private String mensagemErro;
+	private String mensagemErro = null;
 	
 	private Stack<Tipo> pilhaOperadores = new Stack<Tipo>();
 	private Stack<Tipo> pilhaTipos = new Stack<Tipo>();
+	private Tipo res;
 	
 	public AnalisadorExpressao(ArrayList<Tipo> expressao) {
 		this.expressao = expressao;
@@ -30,7 +31,10 @@ public class AnalisadorExpressao {
 		
 		for (int i = 0; i < expressao.size(); ++i) {
 			ehTipoValor = false;
-			empilha(i);
+			if (!empilha(i)) {
+				return Tipo.ERRO;
+			}
+				
 			if (ehTipoValor) {
 				if (temPrecedencia(i)) {
 					if (!realizarOperacao())
@@ -44,21 +48,36 @@ public class AnalisadorExpressao {
 		while (!pilhaOperadores.isEmpty() && pilhaTipos.peek() != Tipo.ERRO) {
 			realizarOperacao();
 		}
-		return pilhaTipos.pop();
+		if (pilhaTipos.isEmpty() && mensagemErro == null) {
+			mensagemErro = "expressão vazia";
+			return Tipo.ERRO;
+		}
+		res = pilhaTipos.pop();
+		return res;
 	}
 	
-	private void empilha(int index) {
+	private boolean empilha(int index) {
 		if (expressao.get(index) == Tipo.INTEGER || expressao.get(index) == Tipo.REAL || expressao.get(index) == Tipo.BOOLEANO) { 
 			ehTipoValor = true;
 			pilhaTipos.push(expressao.get(index));
 			System.out.println("empilhou Tipo: " + expressao.get(index));
-		} else if (expressao.get(index).compareTo(Tipo.PARENTESE_FECHADO) == 0) {
+			return true;
+		} 
+		if (expressao.get(index).compareTo(Tipo.PARENTESE_FECHADO) == 0) {
 			System.out.println("Achou parentese fechado");
 			desempilhaAteParentese();
-		} else {
-			pilhaOperadores.push(expressao.get(index));
-			System.out.println("empilhou Operador: " + expressao.get(index));
+			return true;
 		}
+		
+		if (expressao.get(index).compareTo(Tipo.PROCEDURE) == 0 || expressao.get(index).compareTo(Tipo.PROGRAM) == 0) {
+			System.out.println("empilhou Operador: " + expressao.get(index));
+			mensagemErro = expressao.get(index) + " não pode ser utilizado em expressão";
+			return false;
+		}
+		
+		pilhaOperadores.push(expressao.get(index));
+		System.out.println("empilhou Operador: " + expressao.get(index));
+		return true;
 	}
 	
 	private boolean realizarOperacao() {
@@ -138,9 +157,20 @@ public class AnalisadorExpressao {
 			return Tipo.BOOLEANO;
 		} 
 		else {
-			mensagemErro = "O tipo " + tipo1 + " e o tipo " + tipo2 + "não sumportam o operador " + operador;
+			mensagemErro = "O tipo " + tipo2 + " e o tipo " + tipo1 + " não sumportam o operador " + operador;
 			return Tipo.ERRO;
 		}
+	}
+	
+	public boolean ehAtribuicaoValida(Tipo variavel) {
+		if (variavel == Tipo.REAL && (res == Tipo.REAL || res == Tipo.INTEGER))
+			return true;
+		else if (variavel == Tipo.INTEGER && res == Tipo.INTEGER)
+			return true;
+		else if (variavel == Tipo.BOOLEANO && res == Tipo.BOOLEANO)
+			return true;
+		else 
+			return false;
 	}
 	
 }

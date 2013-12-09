@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import compilador.lexico.Elemento;
 import compilador.lexico.TipoToken;
+import compilador.semantico.AnalisadorExpressao;
 import compilador.semantico.AnalisadorExpressao.Tipo;
 import compilador.semantico.Identificador;
 import compilador.semantico.PilhaEscopo;
@@ -14,8 +15,8 @@ public class AnalisadorSintatico {
 	private int index = 0;
 	private Elemento simboloLido = null;
 	// --Semântico--
-	private ArrayList<Tipo> expresao;
-	PilhaEscopo pilhaEscopo = new PilhaEscopo();
+	private ArrayList<Tipo> expressao;
+	private PilhaEscopo pilhaEscopo = new PilhaEscopo();
 	//--------------
 	
 	public AnalisadorSintatico(ArrayList<Elemento> tabela) {
@@ -131,11 +132,11 @@ public class AnalisadorSintatico {
 			obterSimbolo();
 			if (checarTipoElemento(simboloLido, TipoToken.IDENTIFICADOR)) {
 				// --Semântico--
-				if (pilhaEscopo.foiDeclarada(simboloLido.getToken())) {
+				if (pilhaEscopo.foiDeclaradaNoEscopoAtual(simboloLido.getToken())) {
 					gerarErro("Identificador " + simboloLido.getToken() + " já foi declarado.");
 				}					
 				pilhaEscopo.push(new Identificador(simboloLido.getToken(), Tipo.DESCONHECIDO));
-			//--------------
+				//--------------
 				obterSimbolo();
 				listaIdentificadoresAux();
 			} else {
@@ -148,7 +149,7 @@ public class AnalisadorSintatico {
 	private void listaIdentificadores() {
 		if (checarTipoElemento(simboloLido, TipoToken.IDENTIFICADOR)) {
 			// --Semântico--
-				if (pilhaEscopo.foiDeclarada(simboloLido.getToken())) {
+				if (pilhaEscopo.foiDeclaradaNoEscopoAtual(simboloLido.getToken())) {
 					gerarErro("Identificador " + simboloLido.getToken() + " já foi declarado.");
 				}					
 				pilhaEscopo.push(new Identificador(simboloLido.getToken(), Tipo.DESCONHECIDO));
@@ -380,16 +381,23 @@ public class AnalisadorSintatico {
 			// --Semantico--
 			if (!pilhaEscopo.foiDeclarada(simboloLido.getToken()))
 				gerarErro("Identificador " + simboloLido.getToken() + " não foi declarada");
+			Tipo tipoVariavel = pilhaEscopo.getTipoUltimaBusca();
 			// -------------
 			obterSimbolo();
 			if (checarTipoElemento(simboloLido, TipoToken.COMANDO_ATRIBUICAO)) {
 				// --Semantico--
-				//System.out.println(aux + " = ");
+				expressao = new ArrayList<Tipo>();
 				// -------------
 				obterSimbolo();
 				expressao();
 				// --Semantico--
-				System.out.println(">>>Testar Expressao");
+				AnalisadorExpressao analisaExpressao = new AnalisadorExpressao(expressao);
+				Tipo res = analisaExpressao.ehExpressaoValida();
+				if (res == Tipo.ERRO) {
+					gerarErro(analisaExpressao.getMensagemErro());
+				}
+				if (!analisaExpressao.ehAtribuicaoValida(tipoVariavel))
+					gerarErro("Valor do tipo " + res + " atribuido a uma variável do tipo " + tipoVariavel);
 				// -------------
 				return true;
 			} else {
@@ -422,7 +430,20 @@ public class AnalisadorSintatico {
 	private boolean ifThen() {
 		if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "if")) {
 			obterSimbolo();
+			// --Semântico--
+			expressao = new ArrayList<Tipo>();
+			Tipo tipoEsperado = Tipo.BOOLEANO;
+			//--------------
 			expressao();
+			// --Semantico--
+			AnalisadorExpressao analisaExpressao = new AnalisadorExpressao(expressao);
+			Tipo res = analisaExpressao.ehExpressaoValida();
+			if (res == Tipo.ERRO) {
+				gerarErro(analisaExpressao.getMensagemErro());
+			}
+			if (!analisaExpressao.ehAtribuicaoValida(tipoEsperado))
+				gerarErro("Valor do tipo " + tipoEsperado + " esperado para cláusula if, mas encontrado " + res);
+			// -------------
 			if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "then")) {
 				obterSimbolo();
 				comando();
@@ -441,7 +462,20 @@ public class AnalisadorSintatico {
 	private boolean whileDo() {
 		if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "while")) {
 			obterSimbolo();
+			// --Semântico--
+			expressao = new ArrayList<Tipo>();
+			Tipo tipoEsperado = Tipo.BOOLEANO;
+			//--------------
 			expressao();
+			// --Semantico--
+			AnalisadorExpressao analisaExpressao = new AnalisadorExpressao(expressao);
+			Tipo res = analisaExpressao.ehExpressaoValida();
+			if (res == Tipo.ERRO) {
+				gerarErro(analisaExpressao.getMensagemErro());
+			}
+			if (!analisaExpressao.ehAtribuicaoValida(tipoEsperado))
+				gerarErro("Valor do tipo " + tipoEsperado + " esperado para cláusula while, mas encontrado " + res);
+			// -------------
 			if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "do")) {
 				obterSimbolo();
 				comando();
@@ -480,15 +514,10 @@ public class AnalisadorSintatico {
 	
 	//expressão → expressão_simples | expressão_simples op_relacional expressão_simples
 	private void expressao() {
-		// -- Semantico --
-		System.out.println("Expressão {");
-		// ---------------
 		if (expressaoSimples(true)) {
 			if(opRelacioal()) {
-				expressaoSimples(false);
-				System.out.println("}");
+				expressaoSimples(false);				
 			} else {
-				System.out.println("}");
 				return;
 			}
 		}
@@ -553,6 +582,7 @@ public class AnalisadorSintatico {
 			// --Semantico--
 			if (!pilhaEscopo.foiDeclarada(simboloLido.getToken()))
 				gerarErro("Identificador " + simboloLido.getToken() + " não foi declarado.");
+			expressao.add(pilhaEscopo.getTipoUltimaBusca());
 			// -------------
 			obterSimbolo();
 			if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, "(")) {
@@ -580,7 +610,18 @@ public class AnalisadorSintatico {
 				|| checarTipoElemento(simboloLido, TipoToken.OPERADOR_LOGICO, "true")
 				|| checarTipoElemento(simboloLido, TipoToken.OPERADOR_LOGICO, "false")) {
 			
-			// --Semantico--
+			// --Semântico--
+			switch (simboloLido.getTipo()) {
+				case NUMERO_INTEIRO:
+					expressao.add(Tipo.INTEGER);
+					break;
+				case NUMERO_REAL:
+					expressao.add(Tipo.REAL);
+					break;
+				case OPERADOR_LOGICO:
+					expressao.add(Tipo.BOOLEANO);
+					break;
+			}
 			System.out.println(simboloLido.getClassificao());
 			// -------------
 			obterSimbolo();
@@ -588,14 +629,14 @@ public class AnalisadorSintatico {
 			
 		} else if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, "(")) {
 			// --Semantico--
-			System.out.println("(");
+			expressao.add(Tipo.PARENTESE_ABERTO);
 			// -------------
 			
 			obterSimbolo();
 			expressao();
 			if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ")")) {
 				// --Semantico--
-				System.out.println(")");
+				expressao.add(Tipo.PARENTESE_FECHADO);
 				// -------------
 				obterSimbolo();
 				return true;
@@ -605,6 +646,9 @@ public class AnalisadorSintatico {
 			}
 			
 		} else if (checarTipoElemento(simboloLido, TipoToken.OPERADOR_LOGICO, "not")) {
+			//--Semântico--
+			expressao.add(Tipo.NOT);
+			//-------------
 			obterSimbolo();
 			if (fator()) {
 				return true;
@@ -632,7 +676,7 @@ public class AnalisadorSintatico {
 	private boolean opRelacioal() {
 		if (checarTipoElemento(simboloLido, TipoToken.OPERADOR_RELACIONAL)) {
 			// --Semantico--
-			System.out.println("operador Relacional");
+			expressao.add(Tipo.RELACIONAL);
 			// -------------
 			obterSimbolo();
 			return true;
@@ -644,7 +688,12 @@ public class AnalisadorSintatico {
 	private boolean opAditivo() {
 		if (checarTipoElemento(simboloLido, TipoToken.OPERADOR_ADITIVO)) {
 			// --Semantico--
-			System.out.println("Operador Aditivo");
+			if (simboloLido.getToken().equals("or")) {
+				expressao.add(Tipo.LOGICO);
+			} 
+			else {
+				expressao.add(Tipo.ADITIVO);
+			}
 			// -------------
 			obterSimbolo();
 			return true;
@@ -656,8 +705,13 @@ public class AnalisadorSintatico {
 	private boolean opMultiplicativo() {
 		if (checarTipoElemento(simboloLido, TipoToken.OPERADOR_MULTIPLICATIVO)) {
 			// --Semantico--
-			System.out.println("Operador Multiplicativo");
-			// -------------
+						if (simboloLido.getToken().equals("and")) {
+							expressao.add(Tipo.LOGICO);
+						} 
+						else {
+							expressao.add(Tipo.MULTIPLICATIVO);
+						}
+						// -------------
 			obterSimbolo();
 			return true;
 		}

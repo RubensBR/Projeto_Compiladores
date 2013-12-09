@@ -1,18 +1,21 @@
 program exemplo;
-var faca, queijo: real;
+var faca, queijo: integer;
 
-procedure x (a : integer);
+procedure set (a : integer);
 var xa, xb: integer;
 begin
-	faca := xa + xb * x;
+	faca := xa - xb / 2;
 end;
 
 procedure get (valor : integer);
-var c, d, x1: integer;
+var c, xa, xb: integer;
+procedure teste;
+	begin
+	end;
 begin
-	faca := x + valor * 2;
+	faca := 1 + valor * 2;
 end;
 
 begin
-	faca := faca + exemplo * 2;
+	faca := faca + queijo * 2;
 end.

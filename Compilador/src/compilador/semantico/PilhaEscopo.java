@@ -8,6 +8,7 @@ public class PilhaEscopo {
 
 	private Stack<Identificador> pilha = new Stack<Identificador>();
 	private int nivelEscopo = 0;	
+	private Tipo tipoUltimaBusca;
 	
 	public int getNivelEscopo() {
 		return nivelEscopo;
@@ -60,6 +61,7 @@ public class PilhaEscopo {
 		for (int i = pilha.size() - 1; i > 0; --i) {
 			if (pilha.get(i).getToken().equals(token)) {
 				System.out.println("SIM");
+				tipoUltimaBusca = pilha.get(i).getTipo();
 				return true;
 			}
 		}
@@ -67,6 +69,25 @@ public class PilhaEscopo {
 		return false;
 	}
 	
+	public boolean foiDeclaradaNoEscopoAtual(String token) {
+		System.out.print(token + " foi declarado no escopo atual: ");
+		for (int i = pilha.size() - 1; i > 0; --i) {
+			if (pilha.get(i).getTipo() == Tipo.MARCADOR)
+				break;
+			if (pilha.get(i).getToken().equals(token)) {
+				System.out.println("SIM");
+				tipoUltimaBusca = pilha.get(i).getTipo();
+				return true;
+			}
+		}
+		System.out.println("NÃO");
+		return false;
+	}
+	
+	public Tipo getTipoUltimaBusca() {
+		return tipoUltimaBusca;
+	}
+		
 	private void imprimirPilha() {
 		for (Identificador p: pilha) {
 			System.out.print("[" + p.getToken() + " : " + p.getTipo() + "]");
