@@ -17,6 +17,7 @@ public class AnalisadorSintatico {
 	// --Semântico--
 	private ArrayList<Tipo> expressao;
 	private PilhaEscopo pilhaEscopo = new PilhaEscopo();
+	private int nivelLaco = 0;
 	//--------------
 	
 	public AnalisadorSintatico(ArrayList<Elemento> tabela) {
@@ -275,7 +276,7 @@ public class AnalisadorSintatico {
 			if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "end")) {
 				obterSimbolo();
 				// --Semântico--
-				if (simboloLido.getToken().equals(";")) {
+				if (simboloLido.getToken().equals(";") && nivelLaco == 0) {
 					pilhaEscopo.fimDeEscopo();
 				}
 				//--------------
@@ -330,6 +331,9 @@ public class AnalisadorSintatico {
 	comando -> for variavel := INT UNTO INT listaComandos*/
 	private boolean forTo() {
 		if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "for")) {
+			// --Semântico--
+			++nivelLaco;
+			//--------------
 			obterSimbolo();
 			if (checarTipoElemento(simboloLido, TipoToken.IDENTIFICADOR)) {
 				// --Semântico--
@@ -347,6 +351,9 @@ public class AnalisadorSintatico {
 							if (checarTipoElemento(simboloLido, TipoToken.NUMERO_INTEIRO)) {
 								obterSimbolo();
 								listaComandos();
+								// --Semântico--
+								--nivelLaco;
+								//--------------
 								return true;
 							} else {
 								gerarErro("esperado valor inteiro após 'to' ou 'unto'");
@@ -429,6 +436,9 @@ public class AnalisadorSintatico {
 	//if expressão then comando parte_else 
 	private boolean ifThen() {
 		if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "if")) {
+			// --Semântico--
+			++nivelLaco;
+			//-------------
 			obterSimbolo();
 			// --Semântico--
 			expressao = new ArrayList<Tipo>();
@@ -448,6 +458,9 @@ public class AnalisadorSintatico {
 				obterSimbolo();
 				comando();
 				parteElse();
+				// --Semântico--
+				--nivelLaco;
+				//-------------
 				return true;
 			} else {
 				gerarErro("esperado palavra chave 'then' no lugar de " + simboloLido.getToken());
@@ -461,6 +474,9 @@ public class AnalisadorSintatico {
 	//while expressão do comando
 	private boolean whileDo() {
 		if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "while")) {
+			// --Semântico--
+			++nivelLaco;
+			//--------------
 			obterSimbolo();
 			// --Semântico--
 			expressao = new ArrayList<Tipo>();
@@ -479,6 +495,9 @@ public class AnalisadorSintatico {
 			if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "do")) {
 				obterSimbolo();
 				comando();
+				// --Semântico--
+				--nivelLaco;
+				//--------------
 				return true;
 			} else {
 				gerarErro("esperado palavra chave 'do' no lugar de " + simboloLido.getToken());
@@ -579,26 +598,26 @@ public class AnalisadorSintatico {
 	//#fator → id | id (lista_de_expressões) | num_int | num_real | true | false | (expressão) | not fator
 	private boolean fator() {
 		if (checarTipoElemento(simboloLido, TipoToken.IDENTIFICADOR)) {
-			// --Semantico--
+			// --Semântico--
 			if (!pilhaEscopo.foiDeclarada(simboloLido.getToken()))
 				gerarErro("Identificador " + simboloLido.getToken() + " não foi declarado.");
 			expressao.add(pilhaEscopo.getTipoUltimaBusca());
 			// -------------
 			obterSimbolo();
 			if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, "(")) {
-				// --Semantico--
+				// --Semântico--
 				System.out.println("(");
 				// -------------
 				obterSimbolo();
 				listaExpressoes();
 				if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ")")) {
-					// --Semantico--
+					// --Semântico--
 					System.out.println(")");
 					// -------------
 					obterSimbolo();
 					return true;
 				} else {
-					gerarErro("delimitadir ')' esperado");
+					gerarErro("delimitador ')' esperado");
 					return true;
 				}
 			} else {

@@ -1,21 +1,27 @@
-program exemplo;
-var faca, queijo: integer;
-
-procedure set (a : integer);
-var xa, xb: integer;
+// ANDRE
+{ Programa }
+program exemplo ; {programa para teste de comentário}
+  {teste do lexico}
+var
+   NUMERO, i, r  : integer;
+   final   : integer;
+   teste   : boolean;
+   //teste de comentário
+procedure soma(a: integer; b: integer);
+var teste : integer;
 begin
-	faca := xa - xb / 2;
+   teste := a + b;
 end;
 
-procedure get (valor : integer);
-var c, xa, xb: integer;
-procedure teste;
-	begin
-	end;
-begin
-	faca := 1 + valor * 2;
-end;
-
-begin
-	faca := faca + queijo * 2;
+begin  {tente gerar um erro usando um caracter não permitido.. tipo $} 
+   
+   
+   if (NUMERO >= 20) then
+   begin
+       while (NUMERO >= 20) do
+	   begin
+		  
+	   end;
+   end;
+   final := NUMERO / 1;	  
 end.
