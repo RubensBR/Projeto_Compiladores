@@ -60,23 +60,23 @@ public class AnalisadorExpressao {
 		if (expressao.get(index) == Tipo.INTEGER || expressao.get(index) == Tipo.REAL || expressao.get(index) == Tipo.BOOLEANO) { 
 			ehTipoValor = true;
 			pilhaTipos.push(expressao.get(index));
-			System.out.println("empilhou Tipo: " + expressao.get(index));
+			//System.out.println("empilhou Tipo: " + expressao.get(index));
 			return true;
 		} 
 		if (expressao.get(index).compareTo(Tipo.PARENTESE_FECHADO) == 0) {
-			System.out.println("Achou parentese fechado");
+			//System.out.println("Achou parentese fechado");
 			desempilhaAteParentese();
 			return true;
 		}
 		
 		if (expressao.get(index).compareTo(Tipo.PROCEDURE) == 0 || expressao.get(index).compareTo(Tipo.PROGRAM) == 0) {
-			System.out.println("empilhou Operador: " + expressao.get(index));
+			//System.out.println("empilhou Operador: " + expressao.get(index));
 			mensagemErro = expressao.get(index) + " não pode ser utilizado em expressão";
 			return false;
 		}
 		
 		pilhaOperadores.push(expressao.get(index));
-		System.out.println("empilhou Operador: " + expressao.get(index));
+		//System.out.println("empilhou Operador: " + expressao.get(index));
 		return true;
 	}
 	
@@ -85,7 +85,7 @@ public class AnalisadorExpressao {
 		
 		Tipo operador = pilhaOperadores.pop();
 		if (operador == Tipo.NOT) {
-			System.out.println("Comparando operador not com tipo " + pilhaTipos.peek());
+			//System.out.println("Comparando operador not com tipo " + pilhaTipos.peek());
 			if (pilhaTipos.peek() == Tipo.BOOLEANO) {
 				return true;
 			} 
@@ -102,13 +102,13 @@ public class AnalisadorExpressao {
 		
 		Tipo res = getTipoResultante(tipo1, tipo2, operador);
 		pilhaTipos.push(res);
-		
+		/*
 		System.out.println("-- Compara os tipos da pilha (" + tipo1 + ", " + tipo2 + ")");
 		System.out.println("Desempilha Tipo: " + tipo1);
 		System.out.println("Desempilha Tipo: " + tipo2);		
 		System.out.println("Desempilha Operador: " + operador);
 		System.out.println("Empilha tipo resultante: " + res);
-		System.out.println("-----------------------");
+		System.out.println("-----------------------");*/
 		if (res == Tipo.ERRO)
 			return false;
 		else 
@@ -119,7 +119,8 @@ public class AnalisadorExpressao {
 		while (!pilhaOperadores.isEmpty() && pilhaOperadores.peek().compareTo(Tipo.PARENTESE_ABERTO) != 0) {
 			realizarOperacao();
 		}		
-		System.out.println("desempilha o parentese: " + pilhaOperadores.pop());
+		pilhaOperadores.pop();
+		//System.out.println("desempilha o parentese: " + "(");
 	}
 	
 	private boolean temPrecedencia(int index) {
@@ -130,10 +131,10 @@ public class AnalisadorExpressao {
 		if (index + 1 <= expressao.size() - 1) {
 			if (pilhaOperadores.peek().compareTo(expressao.get(index+1)) > 0
 					|| pilhaOperadores.peek().compareTo(expressao.get(index+1)) == 0) {
-				System.out.println("Operador " + pilhaOperadores.peek() + " tem precedencia sobre " + expressao.get(index+1));
+				//System.out.println("Operador " + pilhaOperadores.peek() + " tem precedencia sobre " + expressao.get(index+1));
 				return true;
 			} else {
-				System.out.println("Operador " + pilhaOperadores.peek() + " não tem precedencia sobre " + expressao.get(index+1));
+				//System.out.println("Operador " + pilhaOperadores.peek() + " não tem precedencia sobre " + expressao.get(index+1));
 				return false;
 			}
 		}

@@ -31,26 +31,7 @@ public class Teste {
 		
 		AnalisadorSintatico sintatico = new AnalisadorSintatico(tabela);
 		sintatico.analisar();
-//		ArrayList<AnalisadorExpressao.Tipo> expressao = new ArrayList<>();
-//		expressao.add(Tipo.NOT);
-//		expressao.add(Tipo.PARENTESE_ABERTO);
-//		expressao.add(Tipo.INTEGER);
-//		expressao.add(Tipo.ADITIVO);
-//		expressao.add(Tipo.REAL);
-//		
-//		expressao.add(Tipo.RELACIONAL);
-//		
-//		expressao.add(Tipo.PARENTESE_ABERTO);
-//		expressao.add(Tipo.INTEGER);
-//		expressao.add(Tipo.PARENTESE_FECHADO);
-//		expressao.add(Tipo.PARENTESE_FECHADO);
-//		
-//		AnalisadorExpressao analisadorExp = new AnalisadorExpressao(expressao);
-//		Tipo res = analisadorExp.ehExpressaoValida();
-//		System.out.println("Tipo resultante: " + res);
-//		if (res == Tipo.ERRO) {
-//			System.out.println(analisadorExp.getMensagemErro());
-//		}
+
 		
 	}
 }

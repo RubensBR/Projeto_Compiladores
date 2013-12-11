@@ -1,47 +1,39 @@
 package compilador.semantico;
 
+import java.util.ArrayList;
 import java.util.Stack;
 
 import compilador.semantico.AnalisadorExpressao.Tipo;
 
 public class PilhaEscopo {
 
-	private Stack<Identificador> pilha = new Stack<Identificador>();
-	private int nivelEscopo = 0;	
+	private Stack<Identificador> pilha = new Stack<Identificador>();	
 	private Tipo tipoUltimaBusca;
-	
-	public int getNivelEscopo() {
-		return nivelEscopo;
-	}
-
-	public void setNivelEscopo(int nivelEscopo) {
-		this.nivelEscopo = nivelEscopo;
-	}
+	private Identificador ultimaProcedureChamada;
 
 	public void iniciarEscopoPrograma(String token) {
 		pilha.push(new Identificador("$", Tipo.MARCADOR));
 		pilha.push(new Identificador(token, Tipo.PROGRAM));
-		System.out.println("iniciarEscopo");
+		//System.out.println("iniciarEscopo");
 	}
 	
 	public void novoEscopo() {
 		pilha.push(new Identificador("$", Tipo.MARCADOR));
-		++nivelEscopo;
-		System.out.println("novoEscopo");
-		imprimirPilha();
+		//System.out.println("novoEscopo");
+		//imprimirPilha();
 	}
 	
 	public void fimDeEscopo() {
 		while (pilha.pop().getTipo() != Tipo.MARCADOR);
-		--nivelEscopo;
-		System.out.println("fimEscopo");
-		imprimirPilha();
+		//System.out.println("fimEscopo");
+		//imprimirPilha();
 	}
 			
-	public void push(Identificador identificador) {
+	public int push(Identificador identificador) {
 		pilha.push(identificador);
-		System.out.println("push");
-		imprimirPilha();
+		//System.out.println("push");
+		//imprimirPilha();
+		return pilha.size() - 1;
 	}
 	
 	public void atribuirTipo(Tipo tipo) {
@@ -52,38 +44,46 @@ public class PilhaEscopo {
 				break;
 			}
 		}
-		System.out.println("atribuirTipo");
-		imprimirPilha();
+		//System.out.println("atribuirTipo");
+		//imprimirPilha();
 	}
 	
 	public boolean foiDeclarada(String token) {
-		System.out.print(token + " foi declarado: ");
+		//System.out.print(token + " foi declarado: ");
 		for (int i = pilha.size() - 1; i > 0; --i) {
 			if (pilha.get(i).getToken().equals(token)) {
-				System.out.println("SIM");
+				//System.out.println("SIM");
 				tipoUltimaBusca = pilha.get(i).getTipo();
+				if (pilha.get(i).getTipo() == Tipo.PROCEDURE)
+					ultimaProcedureChamada = pilha.get(i);
 				return true;
 			}
 		}
-		System.out.println("NÃO");
+		//System.out.println("NÃO");
 		return false;
 	}
 	
 	public boolean foiDeclaradaNoEscopoAtual(String token) {
-		System.out.print(token + " foi declarado no escopo atual: ");
+		//System.out.print(token + " foi declarado no escopo atual: ");
 		for (int i = pilha.size() - 1; i > 0; --i) {
 			if (pilha.get(i).getTipo() == Tipo.MARCADOR)
 				break;
 			if (pilha.get(i).getToken().equals(token)) {
-				System.out.println("SIM");
+				//System.out.println("SIM");
 				tipoUltimaBusca = pilha.get(i).getTipo();
+				if (pilha.get(i).getTipo() == Tipo.PROCEDURE)
+					ultimaProcedureChamada = pilha.get(i);
 				return true;
 			}
 		}
-		System.out.println("NÃO");
+		//System.out.println("NÃO");
 		return false;
 	}
 	
+	public Identificador getUltimaProcedureChamada() {
+		return ultimaProcedureChamada;
+	}
+
 	public Tipo getTipoUltimaBusca() {
 		return tipoUltimaBusca;
 	}
@@ -93,5 +93,19 @@ public class PilhaEscopo {
 			System.out.print("[" + p.getToken() + " : " + p.getTipo() + "]");
 		}
 		System.out.println();
+	}
+	
+	public ArrayList<Tipo> getListaArgumentos() {
+		ArrayList<Tipo> argumentos = new ArrayList<Tipo>();
+		for (int i = pilha.size() - 1; i > 0; --i) {
+			if (pilha.get(i).getTipo() == Tipo.MARCADOR)
+				break;
+			argumentos.add(0, pilha.get(i).getTipo());
+		}
+		return argumentos;
+	}
+	
+	public void ajustarProcedure(int indice, Procedure procedure) {
+		pilha.set(indice, procedure);
 	}
 }

@@ -8,6 +8,7 @@ import compilador.semantico.AnalisadorExpressao;
 import compilador.semantico.AnalisadorExpressao.Tipo;
 import compilador.semantico.Identificador;
 import compilador.semantico.PilhaEscopo;
+import compilador.semantico.Procedure;
 
 public class AnalisadorSintatico {
 
@@ -18,6 +19,7 @@ public class AnalisadorSintatico {
 	private ArrayList<Tipo> expressao;
 	private PilhaEscopo pilhaEscopo = new PilhaEscopo();
 	private int nivelLaco = 0;
+	private ArrayList<Tipo> parametrosPassados;
 	//--------------
 	
 	public AnalisadorSintatico(ArrayList<Elemento> tabela) {
@@ -199,20 +201,28 @@ public class AnalisadorSintatico {
 		}
 	}
 	
+	/*
+	 * Se for preciso mudar o escopo das declarações de subprograma é aqui
+	 */
 	//declaração_de_subprograma → procedure id argumentos; declarações_variáveis declarações_de_subprogramas comando_composto
 	private void declaracaoSubprograma() {
 		if (checarTipoElemento(simboloLido, TipoToken.PALAVRA_CHAVE, "procedure")) {	
 			obterSimbolo();
 			if (checarTipoElemento(simboloLido, TipoToken.IDENTIFICADOR)) {
 				// --Semântico--
-				if (pilhaEscopo.foiDeclarada(simboloLido.getToken()))
+				if (pilhaEscopo.foiDeclaradaNoEscopoAtual(simboloLido.getToken())) // <-- é só mudar este método
 					gerarErro("Identificador " + simboloLido.getToken() + " já foi declarado.");
-				pilhaEscopo.push(new Identificador(simboloLido.getToken(), Tipo.PROCEDURE));
+				String nomeProcedure = simboloLido.getToken();
+				int indice = pilhaEscopo.push(new Identificador(simboloLido.getToken(), Tipo.PROCEDURE));
 				pilhaEscopo.novoEscopo();
 				//--------------
 				obterSimbolo();
 				argumentos();
 				if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ";")) {
+					//semantico
+					ArrayList<Tipo> argumentos = pilhaEscopo.getListaArgumentos();
+					pilhaEscopo.ajustarProcedure(indice, new Procedure(nomeProcedure, Tipo.PROCEDURE, argumentos));
+					//-------------
 					obterSimbolo();
 					declaracoesVariaveis();
 					declaracoesSubprogramas();
@@ -388,7 +398,8 @@ public class AnalisadorSintatico {
 			// --Semantico--
 			if (!pilhaEscopo.foiDeclarada(simboloLido.getToken()))
 				gerarErro("Identificador " + simboloLido.getToken() + " não foi declarada");
-			Tipo tipoVariavel = pilhaEscopo.getTipoUltimaBusca();
+			String nomeIdentificador = simboloLido.getToken();
+			Tipo tipoIdentificador = pilhaEscopo.getTipoUltimaBusca();
 			// -------------
 			obterSimbolo();
 			if (checarTipoElemento(simboloLido, TipoToken.COMANDO_ATRIBUICAO)) {
@@ -399,16 +410,19 @@ public class AnalisadorSintatico {
 				expressao();
 				// --Semantico--
 				AnalisadorExpressao analisaExpressao = new AnalisadorExpressao(expressao);
+				expressao = new ArrayList<>();
 				Tipo res = analisaExpressao.ehExpressaoValida();
 				if (res == Tipo.ERRO) {
 					gerarErro(analisaExpressao.getMensagemErro());
 				}
-				if (!analisaExpressao.ehAtribuicaoValida(tipoVariavel))
-					gerarErro("Valor do tipo " + res + " atribuido a uma variável do tipo " + tipoVariavel);
+				if (!analisaExpressao.ehAtribuicaoValida(tipoIdentificador))
+					gerarErro("Valor do tipo " + res + " atribuido a uma variável do tipo " + tipoIdentificador);
 				// -------------
 				return true;
 			} else {
 				/*Como variável é um id verifica se poder ser uma ativação de procedimento*/
+				if (tipoIdentificador != Tipo.PROCEDURE)
+					gerarErro(nomeIdentificador + " não é um procedimento");
 				return ativacaoProcedimento(); 
 			}
 		} else {
@@ -419,16 +433,94 @@ public class AnalisadorSintatico {
 	//ativação_de_procedimento → id | id (lista_de_expressões)
 	private boolean ativacaoProcedimento() {	
 		if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, "(")) {
+			//semantico
+			parametrosPassados = new ArrayList<Tipo>();
+			//---------
 			obterSimbolo();
 			listaExpressoes();
-			if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ")")) {
+			if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ")")) {				
 				obterSimbolo();
+				//semantico
+				//System.out.println();
+				Procedure procedure = (Procedure) pilhaEscopo.getUltimaProcedureChamada();
+				ArrayList<Tipo> parametrosEsperados = procedure.getParametros();
+				if (parametrosPassados.size() == parametrosEsperados.size()) {
+					for (int i = 0; i < parametrosEsperados.size(); ++i) {
+						if (parametrosPassados.get(i).compareTo(parametrosEsperados.get(i)) != 0) {
+							StringBuilder sb = new StringBuilder();
+							sb.append("A procedure '" + procedure.getToken() + "' espera os parâmetros " );
+							if (parametrosEsperados.size() > 0) {
+								for(Tipo t : parametrosEsperados) {
+									sb.append(t + " ");
+								}
+							} else {
+								sb.append("NENHUM ");
+							}
+							
+							sb.append("mas foram passados ");
+							
+							if (parametrosPassados.size() > 0) {
+								for(Tipo t : parametrosPassados) {
+									sb.append(t + " ");
+								}
+							} else {
+								sb.append("NENHUM ");
+							}
+							
+							gerarErro(sb.toString().trim());
+						}
+					}
+				} else {
+					StringBuilder sb = new StringBuilder();
+					sb.append("A procedure '" + procedure.getToken() + "' espera os parâmetros " );
+					if (parametrosEsperados.size() > 0) {
+						for(Tipo t : parametrosEsperados) {
+							sb.append(t + " ");
+						}
+					} else {
+						sb.append("NENHUM ");
+					}
+					
+					sb.append("mas foram passados ");
+					
+					if (parametrosPassados.size() > 0) {
+						for(Tipo t : parametrosPassados) {
+							sb.append(t + " ");
+						}
+					} else {
+						sb.append("NENHUM ");
+					}
+					gerarErro(sb.toString().trim());
+				}
+				
+				parametrosPassados = null;
+				//---------
 				return true;
 			} else {
 				gerarErro("delemitador ')' esperado");
 				return true;
 			}
 		} else { //então é só o id
+			//semantico
+			Procedure procedure = (Procedure) pilhaEscopo.getUltimaProcedureChamada();
+			ArrayList<Tipo> parametrosEsperados = procedure.getParametros();
+			if (parametrosEsperados.size() != 0) {				
+				StringBuilder sb = new StringBuilder();
+				sb.append("A procedure '" + procedure.getToken() + "' espera os parâmetros " );
+				if (parametrosEsperados.size() > 0) {
+					for(Tipo t : parametrosEsperados) {
+						sb.append(t + " ");
+					}
+				} else {
+					sb.append("NENHUM ");
+				}
+				
+				sb.append("mas NENHUM foi passado");
+				
+				gerarErro(sb.toString());
+					
+			}
+			//--------
 			return true;				
 		}
 	}
@@ -447,6 +539,7 @@ public class AnalisadorSintatico {
 			expressao();
 			// --Semantico--
 			AnalisadorExpressao analisaExpressao = new AnalisadorExpressao(expressao);
+			expressao = new ArrayList<>();
 			Tipo res = analisaExpressao.ehExpressaoValida();
 			if (res == Tipo.ERRO) {
 				gerarErro(analisaExpressao.getMensagemErro());
@@ -485,6 +578,7 @@ public class AnalisadorSintatico {
 			expressao();
 			// --Semantico--
 			AnalisadorExpressao analisaExpressao = new AnalisadorExpressao(expressao);
+			expressao = new ArrayList<>();
 			Tipo res = analisaExpressao.ehExpressaoValida();
 			if (res == Tipo.ERRO) {
 				gerarErro(analisaExpressao.getMensagemErro());
@@ -518,16 +612,41 @@ public class AnalisadorSintatico {
 	}
 	
 	//lista_de_expressões_aux → , expressão lista_de_expressões_aux | ε
-	private void listaExpressoesAux() {
-		if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ",")) {
+	private void listaExpressoesAux() {//aqui teste para procedure
+		if (checarTipoElemento(simboloLido, TipoToken.DELIMITADOR, ",")) {			
+			obterSimbolo();
+			//semantico
+			expressao = new ArrayList<>();
+			//---------
 			expressao();
+			//semantico
+			AnalisadorExpressao analisaExpressao = new AnalisadorExpressao(expressao);
+			expressao = new ArrayList<>();
+			Tipo res = analisaExpressao.ehExpressaoValida();
+			if (res == Tipo.ERRO) {
+				gerarErro(analisaExpressao.getMensagemErro());
+			}
+			parametrosPassados.add(res);
+			//--------
 			listaExpressoesAux();
 		} 
 	}
 	
 	//lista_de_expressões → expressão lista_de_expressões_ aux
-	private void listaExpressoes() {
+	private void listaExpressoes() {//aqui teste para procedure
+		//semantico
+		expressao = new ArrayList<>();
+		//---------
 		expressao();
+		//semantico
+		AnalisadorExpressao analisaExpressao = new AnalisadorExpressao(expressao);
+		expressao = new ArrayList<>();
+		Tipo res = analisaExpressao.ehExpressaoValida();
+		if (res == Tipo.ERRO) {
+			gerarErro(analisaExpressao.getMensagemErro());
+		}
+		parametrosPassados.add(res);
+		//--------
 		listaExpressoesAux();
 	}
 	
@@ -641,7 +760,7 @@ public class AnalisadorSintatico {
 					expressao.add(Tipo.BOOLEANO);
 					break;
 			}
-			System.out.println(simboloLido.getClassificao());
+			//System.out.println(simboloLido.getClassificao());
 			// -------------
 			obterSimbolo();
 			return true;

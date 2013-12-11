@@ -7,6 +7,8 @@ public class Identificador {
 	private String token;
 	private Tipo tipo;
 	
+	public Identificador(){}
+	
 	public Identificador(String token, Tipo tipo) {
 		this.token = token;
 		this.tipo = tipo;

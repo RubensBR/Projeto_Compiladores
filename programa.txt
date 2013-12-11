@@ -1,27 +1,33 @@
-// ANDRE
-{ Programa }
-program exemplo ; {programa para teste de comentário}
-  {teste do lexico}
+program MyProgram;
 var
-   NUMERO, i, r  : integer;
-   final   : integer;
-   teste   : boolean;
-   //teste de comentário
-procedure soma(a: integer; b: integer);
-var teste : integer;
+valor1, valor2 : integer;
+resultado : real;
+param1, param2 : integer;
+   
+procedure soma(a: integer; b: integer; c: boolean);
 begin
-   teste := a + b;
+   resultado := a + b;
+end;
+procedure divisao(a: integer; b: integer; resultado: real);
+var
+	soma: integer;
+begin
+   resultado := soma;
 end;
 
-begin  {tente gerar um erro usando um caracter não permitido.. tipo $} 
-   
-   
-   if (NUMERO >= 20) then
-   begin
-       while (NUMERO >= 20) do
-	   begin
-		  
-	   end;
-   end;
-   final := NUMERO / 1;	  
+begin  
+	if (valor1 <> valor2) then
+	begin
+		divisao(10, 10*2, 10/5.2);
+	end
+	else	
+	begin
+		soma(valor1, valor2 , true);
+	end;
+	while (resultado < 5) do
+	begin
+		resultado := 2.5;
+	end;
+	valor1 :=  (valor1 + valor2);
+	divisao(valor1, valor2, resultado);
 end.
