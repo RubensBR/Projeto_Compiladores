@@ -422,7 +422,7 @@ public class AnalisadorSintatico {
 			} else {
 				/*Como variável é um id verifica se poder ser uma ativação de procedimento*/
 				if (tipoIdentificador != Tipo.PROCEDURE)
-					gerarErro(nomeIdentificador + " não é um procedimento");
+					gerarErro(nomeIdentificador + " não é uma procedure");
 				return ativacaoProcedimento(); 
 			}
 		} else {
@@ -445,7 +445,9 @@ public class AnalisadorSintatico {
 				Procedure procedure = (Procedure) pilhaEscopo.getUltimaProcedureChamada();
 				ArrayList<Tipo> parametrosEsperados = procedure.getParametros();
 				if (parametrosPassados.size() == parametrosEsperados.size()) {
-					for (int i = 0; i < parametrosEsperados.size(); ++i) {
+					for (int i = 0; i < parametrosEsperados.size(); ++i) {						
+//						if (!(parametrosEsperados.get(i).compareTo(parametrosPassados.get(i)) == 0 ||
+//								(parametrosEsperados.get(i) == Tipo.REAL && parametrosPassados.get(i) == Tipo.INTEGER))) {
 						if (parametrosPassados.get(i).compareTo(parametrosEsperados.get(i)) != 0) {
 							StringBuilder sb = new StringBuilder();
 							sb.append("A procedure '" + procedure.getToken() + "' espera os parâmetros " );

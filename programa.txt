@@ -10,10 +10,11 @@ begin
 end;
 procedure divisao(a: integer; b: integer; resultado: real);
 var
-	soma: integer;
+	soma : integer;
 begin
    resultado := soma;
 end;
+
 
 begin  
 	if (valor1 <> valor2) then
@@ -26,8 +27,8 @@ begin
 	end;
 	while (resultado < 5) do
 	begin
-		resultado := 2.5;
+		resultado := 12;
 	end;
 	valor1 :=  (valor1 + valor2);
-	divisao(valor1, valor2, resultado);
+	divisao(10, 1, 11);
 end.
